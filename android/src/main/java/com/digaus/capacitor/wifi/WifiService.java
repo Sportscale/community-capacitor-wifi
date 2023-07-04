@@ -152,9 +152,13 @@ public void connect(PluginCall call) {
                     // If the device is already connected to the specified Wi-Fi network, request a persistent connection
                     NetworkRequest.Builder builder = new NetworkRequest.Builder();
                     builder.addTransportType(NetworkCapabilities.TRANSPORT_WIFI);
-                    builder.setNetworkId(wifiInfo.getNetworkId());
-                    builder.setCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
-                    builder.setLinkProperties(wifiInfo.getLinkProperties());
+                    WifiNetworkSpecifier wifiNetworkSpecifier = new WifiNetworkSpecifier.Builder()
+                        .setSsid(ssid)
+                        .setWpa2Passphrase(password)
+                        .setIsHiddenSsid(isHiddenSsid)
+                        .build();
+                    builder.setNetworkSpecifier(wifiNetworkSpecifier);
+                    builder.removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
                     NetworkRequest networkRequest = builder.build();
                     connectivityManager.requestNetwork(networkRequest, new ConnectivityManager.NetworkCallback() {
                         @Override
@@ -195,7 +199,7 @@ public void connect(PluginCall call) {
             }
         });
     }
-}
+} 
     public void connectPrefix(PluginCall call) {
         this.savedCall = call;
         if (API_VERSION < 29) {
