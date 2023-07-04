@@ -392,7 +392,42 @@ public void connect(PluginCall call) {
                 (ip >> 24 & 0xff)
         );
     }
+ public void connectPrefix(PluginCall call) {
+        this.savedCall = call;
+        if (API_VERSION < 29) {
+            call.reject("ERROR_API_29_OR_GREATER_REQUIRED");
+        } else {
+            String ssid = call.getString("ssid");
+            String password = call.getString("password");
 
+            /*String connectedSSID = this.getWifiServiceInfo(call);
+
+            if (!ssid.equals(connectedSSID)) {*/
+            this.releasePreviousConnection();
+
+            WifiNetworkSpecifier.Builder builder = new WifiNetworkSpecifier.Builder();
+            PatternMatcher ssidPattern = new PatternMatcher(ssid, PatternMatcher.PATTERN_PREFIX);
+            builder.setSsidPattern(ssidPattern);
+            if (password != null && password.length() > 0) {
+                builder.setWpa2Passphrase(password);
+            }
+
+            WifiNetworkSpecifier wifiNetworkSpecifier = builder.build();
+            NetworkRequest.Builder networkRequestBuilder = new NetworkRequest.Builder();
+            networkRequestBuilder.addTransportType(NetworkCapabilities.TRANSPORT_WIFI);
+            networkRequestBuilder.setNetworkSpecifier(wifiNetworkSpecifier);
+            networkRequestBuilder.removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+            NetworkRequest networkRequest = networkRequestBuilder.build();
+            this.forceWifiUsage(networkRequest);
+
+            // Wait for connection to finish, otherwise throw a timeout error
+            new ValidateConnection().execute(call, this);
+            /*} else {
+                this.getSSID(call);
+            }*/
+        }
+
+    }
 
     private String getWifiServiceInfo(PluginCall call) {
 
