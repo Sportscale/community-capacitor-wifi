@@ -18,7 +18,7 @@ export interface WifiPlugin {
     connectPrefix(options: {
         ssid: string;
         password?: string;
-        /** iOS only: https://developer.apple.com/documentation/networkextension/nehotspotconfiguration/2887518-joinonce */
+        /** iOS only: https://developer.apple.com/documentation/networkextension/nehotspotconfiguration/2887518-joinonce yy */
         joinOnce?: boolean;
     }): Promise<{
         ssid: string | null;

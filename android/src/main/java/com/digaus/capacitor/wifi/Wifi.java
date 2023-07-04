@@ -55,7 +55,7 @@ public class Wifi extends Plugin {
     @PluginMethod()
     public void connect(PluginCall call) {
         if (!call.getData().has("ssid")) {
-            call.reject("Must provide an ssid");
+            call.reject("Must provide an ssiddd");
             return;
         }
         if (API_VERSION >= 23 && getPermissionState("fineLocation") != PermissionState.GRANTED) {

@@ -127,79 +127,42 @@ public class WifiService {
     // }
 
 public void connect(PluginCall call) {
-    this.savedCall = call;
-    String ssid = call.getString("ssid");
-    String password = call.getString("password");
-    boolean isHiddenSsid = false;
-    if (call.hasOption("isHiddenSsid")) {
-        isHiddenSsid = call.getBoolean("isHiddenSsid");
-    }
+  this.savedCall = call;
+  String ssid = call.getString("ssid");
+  String password = call.getString("password");
+  boolean isHiddenSsid = false;
+  if (call.hasOption("isHiddenSsid")) {
+      isHiddenSsid = call.getBoolean("isHiddenSsid");
+  }
 
-    // Release current connection if there is one
-    this.releasePreviousConnection();
+  // Release current connection if there is one
+  this.releasePreviousConnection();
 
-    // if (API_VERSION < 29) {
-    //     int networkId = this.addNetwork(call);
-    //     if (networkId > -1) {
-    //         wifiManager.enableNetwork(networkId, true);
-    //         wifiManager.reconnect();
+  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+      // Create a list of WifiNetworkSuggestion objects
+      List<WifiNetworkSuggestion> networkSuggestions = new ArrayList<>();
 
-    //         // Request a persistent Wi-Fi connection
-    //         WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-    //         if (wifiInfo!= null && wifiInfo.getSSID()!= null && wifiInfo.getSSID().equals("\"" + ssid + "\"")) {
-    //             NetworkInfo networkInfo = connectivityManager.getNetworkInfo(wifiInfo.getNetworkId());
-    //             if (networkInfo!= null && networkInfo.isConnected()) {
-    //                 // If the device is already connected to the specified Wi-Fi network, request a persistent connection
-    //                 NetworkRequest.Builder builder = new NetworkRequest.Builder();
-    //                 builder.addTransportType(NetworkCapabilities.TRANSPORT_WIFI);
-    //                 WifiNetworkSpecifier wifiNetworkSpecifier = new WifiNetworkSpecifier.Builder()
-    //                     .setSsid(ssid)
-    //                     .setWpa2Passphrase(password)
-    //                     .setIsHiddenSsid(isHiddenSsid)
-    //                     .build();
-    //                 builder.setNetworkSpecifier(wifiNetworkSpecifier);
-    //                 builder.removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
-    //                 NetworkRequest networkRequest = builder.build();
-    //                 connectivityManager.requestNetwork(networkRequest, new ConnectivityManager.NetworkCallback() {
-    //                     @Override
-    //                     public void onAvailable(Network network) {
-    //                         super.onAvailable(network);
-    //                         // The device is now connected to the Wi-Fi network and the app can remain open
-    //                     }
-    //                 });
-    //             }
-    //         }
+      // Create a WifiNetworkSuggestion object for the network you want to connect to
+      WifiNetworkSuggestion suggestion = new WifiNetworkSuggestion.Builder()
+        .setSsid(ssid)
+        .setWpa2Passphrase(password)
+        .setIsHiddenSsid(isHiddenSsid)
+        .build();
 
-    //         this.forceWifiUsage(null);
+      // Add the suggestion to the list
+      networkSuggestions.add(suggestion);
 
-    //     } else {
-    //         call.reject("INVALID_NETWORK_ID_TO_CONNECT");
-    //     }
-    // } else {
-        WifiNetworkSpecifier.Builder builder = new WifiNetworkSpecifier.Builder();
-        builder.setSsid(ssid);
-        if (password!= null && password.length() > 0) {
-            builder.setWpa2Passphrase(password);
-        }
-        if (isHiddenSsid) {
-            builder.setIsHiddenSsid(true);
-        }
+      // Pass the list of suggestions to the WifiManager
+      wifiManager.addNetworkSuggestions(networkSuggestions);
 
-        WifiNetworkSpecifier wifiNetworkSpecifier = builder.build();
-        NetworkRequest.Builder networkRequestBuilder = new NetworkRequest.Builder();
-        networkRequestBuilder.addTransportType(NetworkCapabilities.TRANSPORT_WIFI);
-        networkRequestBuilder.setNetworkSpecifier(wifiNetworkSpecifier);
-        networkRequestBuilder.removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
-        NetworkRequest networkRequest = networkRequestBuilder.build();
-        connectivityManager.requestNetwork(networkRequest, new ConnectivityManager.NetworkCallback() {
-            @Override
-            public void onAvailable(Network network) {
-                super.onAvailable(network);
-                // The device is now connected to the Wi-Fi network and the app can remain open
-            }
-        });
-    // }
-} 
+      // Enable auto-connection to the network
+      wifiManager.reassociate();
+  } else {
+      // Connect to the network using the previous implementation
+      // (addNetwork(), enableNetwork(), etc.)
+      // ...
+  }
+}
     public void connectPrefix(PluginCall call) {
         this.savedCall = call;
         if (API_VERSION < 29) {
