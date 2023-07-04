@@ -24,9 +24,10 @@ import android.util.Log;
 import com.getcapacitor.Bridge;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.PluginCall;
-
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import android.net.wifi.WifiNetworkSuggestion;
 
 public class WifiService {
     private static String TAG = "WifiService";
