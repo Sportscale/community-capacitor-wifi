@@ -76,56 +76,126 @@ public class WifiService {
         }
     }
 
-    public void connect(PluginCall call) {
-        this.savedCall = call;
-        String ssid = call.getString("ssid");
-        String password = call.getString("password");
-        boolean isHiddenSsid = false;
-        if (call.hasOption("isHiddenSsid")) {
-            isHiddenSsid = call.getBoolean("isHiddenSsid");
-        }
-        /*String connectedSSID = this.getWifiServiceInfo(call);
+    // public void connect(PluginCall call) {
+    //     this.savedCall = call;
+    //     String ssid = call.getString("ssid");
+    //     String password = call.getString("password");
+    //     boolean isHiddenSsid = false;
+    //     if (call.hasOption("isHiddenSsid")) {
+    //         isHiddenSsid = call.getBoolean("isHiddenSsid");
+    //     }
+    //     /*String connectedSSID = this.getWifiServiceInfo(call);
 
-        if (!ssid.equals(connectedSSID)) {*/
-        // Release current connection if there is one
-        this.releasePreviousConnection();
+    //     if (!ssid.equals(connectedSSID)) {*/
+    //     // Release current connection if there is one
+    //     this.releasePreviousConnection();
 
-        if (API_VERSION < 29) {
-            int networkId = this.addNetwork(call);
-            if (networkId > -1) {
-                wifiManager.enableNetwork(networkId, true);
-                wifiManager.reconnect();
+    //     if (API_VERSION < 29) {
+    //         int networkId = this.addNetwork(call);
+    //         if (networkId > -1) {
+    //             wifiManager.enableNetwork(networkId, true);
+    //             wifiManager.reconnect();
 
-                this.forceWifiUsage(null);
+    //             this.forceWifiUsage(null);
 
 
-            } else {
-                call.reject("INVALID_NETWORK_ID_TO_CONNECT");
-            }
-        } else {
-            WifiNetworkSpecifier.Builder builder = new WifiNetworkSpecifier.Builder();
-            builder.setSsid(ssid);
-            if (password != null && password.length() > 0) {
-                builder.setWpa2Passphrase(password);
-            }
-            if (isHiddenSsid) {
-                builder.setIsHiddenSsid(true);
-            }
+    //         } else {
+    //             call.reject("INVALID_NETWORK_ID_TO_CONNECT");
+    //         }
+    //     } else {
+    //         WifiNetworkSpecifier.Builder builder = new WifiNetworkSpecifier.Builder();
+    //         builder.setSsid(ssid);
+    //         if (password != null && password.length() > 0) {
+    //             builder.setWpa2Passphrase(password);
+    //         }
+    //         if (isHiddenSsid) {
+    //             builder.setIsHiddenSsid(true);
+    //         }
 
-            WifiNetworkSpecifier wifiNetworkSpecifier = builder.build();
-            NetworkRequest.Builder networkRequestBuilder = new NetworkRequest.Builder();
-            networkRequestBuilder.addTransportType(NetworkCapabilities.TRANSPORT_WIFI);
-            networkRequestBuilder.setNetworkSpecifier(wifiNetworkSpecifier);
-            networkRequestBuilder.removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
-            NetworkRequest networkRequest = networkRequestBuilder.build();
-            this.forceWifiUsage(networkRequest);
-        }
+    //         WifiNetworkSpecifier wifiNetworkSpecifier = builder.build();
+    //         NetworkRequest.Builder networkRequestBuilder = new NetworkRequest.Builder();
+    //         networkRequestBuilder.addTransportType(NetworkCapabilities.TRANSPORT_WIFI);
+    //         networkRequestBuilder.setNetworkSpecifier(wifiNetworkSpecifier);
+    //         networkRequestBuilder.removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+    //         NetworkRequest networkRequest = networkRequestBuilder.build();
+    //         this.forceWifiUsage(networkRequest);
+    //     }
 
-        /*} else {
-            this.getSSID(call);
-        }*/
+    //     /*} else {
+    //         this.getSSID(call);
+    //     }*/
+    // }
+
+public void connect(PluginCall call) {
+    this.savedCall = call;
+    String ssid = call.getString("ssid");
+    String password = call.getString("password");
+    boolean isHiddenSsid = false;
+    if (call.hasOption("isHiddenSsid")) {
+        isHiddenSsid = call.getBoolean("isHiddenSsid");
     }
 
+    // Release current connection if there is one
+    this.releasePreviousConnection();
+
+    if (API_VERSION < 29) {
+        int networkId = this.addNetwork(call);
+        if (networkId > -1) {
+            wifiManager.enableNetwork(networkId, true);
+            wifiManager.reconnect();
+
+            // Request a persistent Wi-Fi connection
+            WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+            if (wifiInfo!= null && wifiInfo.getSSID()!= null && wifiInfo.getSSID().equals("\"" + ssid + "\"")) {
+                NetworkInfo networkInfo = connectivityManager.getNetworkInfo(wifiInfo.getNetworkId());
+                if (networkInfo!= null && networkInfo.isConnected()) {
+                    // If the device is already connected to the specified Wi-Fi network, request a persistent connection
+                    NetworkRequest.Builder builder = new NetworkRequest.Builder();
+                    builder.addTransportType(NetworkCapabilities.TRANSPORT_WIFI);
+                    builder.setNetworkId(wifiInfo.getNetworkId());
+                    builder.setCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+                    builder.setLinkProperties(wifiInfo.getLinkProperties());
+                    NetworkRequest networkRequest = builder.build();
+                    connectivityManager.requestNetwork(networkRequest, new ConnectivityManager.NetworkCallback() {
+                        @Override
+                        public void onAvailable(Network network) {
+                            super.onAvailable(network);
+                            // The device is now connected to the Wi-Fi network and the app can remain open
+                        }
+                    });
+                }
+            }
+
+            this.forceWifiUsage(null);
+
+        } else {
+            call.reject("INVALID_NETWORK_ID_TO_CONNECT");
+        }
+    } else {
+        WifiNetworkSpecifier.Builder builder = new WifiNetworkSpecifier.Builder();
+        builder.setSsid(ssid);
+        if (password!= null && password.length() > 0) {
+            builder.setWpa2Passphrase(password);
+        }
+        if (isHiddenSsid) {
+            builder.setIsHiddenSsid(true);
+        }
+
+        WifiNetworkSpecifier wifiNetworkSpecifier = builder.build();
+        NetworkRequest.Builder networkRequestBuilder = new NetworkRequest.Builder();
+        networkRequestBuilder.addTransportType(NetworkCapabilities.TRANSPORT_WIFI);
+        networkRequestBuilder.setNetworkSpecifier(wifiNetworkSpecifier);
+        networkRequestBuilder.removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+        NetworkRequest networkRequest = networkRequestBuilder.build();
+        connectivityManager.requestNetwork(networkRequest, new ConnectivityManager.NetworkCallback() {
+            @Override
+            public void onAvailable(Network network) {
+                super.onAvailable(network);
+                // The device is now connected to the Wi-Fi network and the app can remain open
+            }
+        });
+    }
+}
     public void connectPrefix(PluginCall call) {
         this.savedCall = call;
         if (API_VERSION < 29) {
