@@ -248,9 +248,27 @@ public void connect(PluginCall call) {
     //     call.success();
     // }
 
+    // public void disconnect(PluginCall call) {
+    // // if (wifiManager != null) {
+    // //   wifiManager.disconnect();
+    // // }
+    //   ConnectivityManager manager = (ConnectivityManager) this.context.getSystemService(Context.CONNECTIVITY_SERVICE);
+    //   if (this.networkCallback != null) {
+    //       manager.unregisterNetworkCallback(this.networkCallback);
+    //       this.networkCallback = null;
+    //   }
+    //   manager.bindProcessToNetwork(null);
+    // }
+
     public void disconnect(PluginCall call) {
     if (wifiManager != null) {
-      wifiManager.disconnect();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // Remove the network suggestions
+            wifiManager.removeNetworkSuggestions(new ArrayList<>());
+        } else {
+            // Disconnect from the currently connected WiFi network
+            wifiManager.disconnect();
+        }
     }
 }
     private void releasePreviousConnection() {
