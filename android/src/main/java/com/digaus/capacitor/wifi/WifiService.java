@@ -129,68 +129,87 @@ public class WifiService {
     // }
 
 public void connect(PluginCall call) {
-    this.savedCall = call;
-    String ssid = call.getString("ssid");
-    String password = call.getString("password");
-    boolean isHiddenSsid = false;
-    if (call.hasOption("isHiddenSsid")) {
-        isHiddenSsid = call.getBoolean("isHiddenSsid");
+        this.savedCall = call;
+        String ssid = call.getString("ssid");
+        String password = call.getString("password");
+        boolean isHiddenSsid = false;
+        if (call.hasOption("isHiddenSsid")) {
+            isHiddenSsid = call.getBoolean("isHiddenSsid");
+        }
+
+        // Release current connection if there is one
+        this.releasePreviousConnection();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // Create a list of WifiNetworkSuggestion objects
+            List<WifiNetworkSuggestion> networkSuggestions = new ArrayList<>();
+
+            // Create a WifiNetworkSuggestion object for the network you want to connect to
+            WifiNetworkSuggestion suggestion = new WifiNetworkSuggestion.Builder()
+                    .setSsid(ssid)
+                    .setWpa2Passphrase(password)
+                    .setIsHiddenSsid(isHiddenSsid)
+                    .build();
+            // Add the suggestion to the list
+            networkSuggestions.add(suggestion);
+            // Pass the list of suggestions to the WifiManager
+            wifiManager.addNetworkSuggestions(networkSuggestions);
+            // Enable auto-connection to the network
+            wifiManager.reassociate();
+            // Get the network ID of the connected network
+            int networkId = wifiManager.getConnectionInfo().getNetworkId();
+            // Get the Network object corresponding to the network ID
+            Network network = null;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                Network[] networks = connectivityManager.getAllNetworks();
+                for (Network n : networks) {
+                    NetworkInfo networkInfo = connectivityManager.getNetworkInfo(n);
+                    if (networkInfo != null && networkInfo.getType() == ConnectivityManager.TYPE_WIFI && networkInfo.getExtraInfo().equals("\"" + ssid + "\"")) {
+                        network = n;
+                        break;
+                    }
+                }
+            }
+            // Bind the current process to the network
+            if (network != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    connectivityManager.bindProcessToNetwork(network);
+                    Log.d(TAG, "Bind process to network");
+                } else {
+                    Toast.makeText(context, "Binding to network requires at least Android Marshmallow (API level 23)", Toast.LENGTH_SHORT).show();
+                }
+            }
+        } else {
+            // Connect to the network using the previous implementation
+            // (addNetwork(), enableNetwork(), etc.)
+            // ...
+        }
+        Log.d(TAG, "Connect function executed");
+        // Call native prompts or display logs for each step if needed
     }
 
-    // Release current connection if there is one
-    this.releasePreviousConnection();
+public void disconnect(PluginCall call) {
+    if (wifiManager != null) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // Get the list of network suggestions
+            List<WifiNetworkSuggestion> networkSuggestions = wifiManager.getNetworkSuggestions();
+            Log.d(TAG, "Retrieved network suggestions: " + networkSuggestions.size());
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-        // Create a list of WifiNetworkSuggestion objects
-        List<WifiNetworkSuggestion> networkSuggestions = new ArrayList<>();
-
-        // Create a WifiNetworkSuggestion object for the network you want to connect to
-        WifiNetworkSuggestion suggestion = new WifiNetworkSuggestion.Builder()
-                .setSsid(ssid)
-                .setWpa2Passphrase(password)
-                .setIsHiddenSsid(isHiddenSsid)
-                .build();
-
-        // Add the suggestion to the list
-        networkSuggestions.add(suggestion);
-
-        // Pass the list of suggestions to the WifiManager
-        wifiManager.addNetworkSuggestions(networkSuggestions);
-
-        // Enable auto-connection to the network
-        wifiManager.reassociate();
-
-        // Get the network ID of the connected network
-        int networkId = wifiManager.getConnectionInfo().getNetworkId();
-
-        // Get the Network object corresponding to the network ID
-        Network network = null;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            Network[] networks = connectivityManager.getAllNetworks();
-            for (Network n : networks) {
-                NetworkInfo networkInfo = connectivityManager.getNetworkInfo(n);
-                if (networkInfo != null && networkInfo.getType() == ConnectivityManager.TYPE_WIFI && networkInfo.getExtraInfo().equals("\"" + ssid + "\"")) {
-                    network = n;
+            // Remove the specific network suggestion
+            for (WifiNetworkSuggestion suggestion : networkSuggestions) {
+                if (suggestion.getSsid().equals(ssid)) {
+                    wifiManager.removeNetwork(suggestion);
+                    Log.d(TAG, "Network suggestion removed");
                     break;
                 }
             }
+        } else {
+            // Disconnect from the currently connected WiFi network
+            wifiManager.disconnect();
+            Log.d(TAG, "Disconnected from WiFi network");
         }
-
-        // Bind the current process to the network
-        if (network != null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                connectivityManager.bindProcessToNetwork(network);
-            } else {
-                Toast.makeText(context, "Binding to network requires at least Android Marshmallow (API level 23)", Toast.LENGTH_SHORT).show();
-            }
-        }
-    } else {
-        // Connect to the network using the previous implementation
-        // (addNetwork(), enableNetwork(), etc.)
-        // ...
     }
 }
-
 // public void connect(PluginCall call) {
 //     this.savedCall = call;
 //     String ssid = call.getString("ssid");
@@ -260,17 +279,6 @@ public void connect(PluginCall call) {
     //   manager.bindProcessToNetwork(null);
     // }
 
-    public void disconnect(PluginCall call) {
-    if (wifiManager != null) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            // Remove the network suggestions
-            wifiManager.removeNetworkSuggestions(new ArrayList<>());
-        } else {
-            // Disconnect from the currently connected WiFi network
-            wifiManager.disconnect();
-        }
-    }
-}
     private void releasePreviousConnection() {
         if (API_VERSION >= 23) {
             ConnectivityManager manager = (ConnectivityManager) this.context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -551,3 +559,86 @@ public void connect(PluginCall call) {
     }
 
 }
+
+// public class WifiService {
+//     private static String TAG = "WifiService";
+//     private static final int API_VERSION = Build.VERSION.SDK_INT;
+//     private PluginCall savedCall;
+//     private ConnectivityManager.NetworkCallback networkCallback;
+//     WifiManager wifiManager;
+//     ConnectivityManager connectivityManager;
+//     Context context;
+//     Bridge bridge;
+//     public void load(Bridge bridge) {
+//         this.bridge = bridge;
+//         this.wifiManager = (WifiManager) this.bridge.getActivity().getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+//         this.connectivityManager = (ConnectivityManager) this.bridge.getActivity().getApplicationContext().getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+//         this.context = this.bridge.getContext();
+//     }
+//   public void connect(PluginCall call) {
+//     this.savedCall = call;
+//     String ssid = call.getString("ssid");
+//     String password = call.getString("password");
+//     boolean isHiddenSsid = false;
+//     if (call.hasOption("isHiddenSsid")) {
+//         isHiddenSsid = call.getBoolean("isHiddenSsid");
+//   }
+//     // Release current connection if there is one
+//     this.releasePreviousConnection();
+
+//     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+//       // Create a list of WifiNetworkSuggestion objects
+//       List<WifiNetworkSuggestion> networkSuggestions = new ArrayList<>();
+
+//       // Create a WifiNetworkSuggestion object for the network you want to connect to
+//       WifiNetworkSuggestion suggestion = new WifiNetworkSuggestion.Builder()
+//               .setSsid(ssid)
+//               .setWpa2Passphrase(password)
+//               .setIsHiddenSsid(isHiddenSsid)
+//               .build();
+//       // Add the suggestion to the list
+//       networkSuggestions.add(suggestion);
+//       // Pass the list of suggestions to the WifiManager
+//       wifiManager.addNetworkSuggestions(networkSuggestions);
+//       // Enable auto-connection to the network
+//       wifiManager.reassociate();
+//       // Get the network ID of the connected network
+//       int networkId = wifiManager.getConnectionInfo().getNetworkId();
+//       // Get the Network object corresponding to the network ID
+//       Network network = null;
+//       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//           Network[] networks = connectivityManager.getAllNetworks();
+//           for (Network n : networks) {
+//               NetworkInfo networkInfo = connectivityManager.getNetworkInfo(n);
+//               if (networkInfo != null && networkInfo.getType() == ConnectivityManager.TYPE_WIFI && networkInfo.getExtraInfo().equals("\"" + ssid + "\"")) {
+//                   network = n;
+//                   break;
+//               }
+//           }
+//       }
+//       // Bind the current process to the network
+//       if (network != null) {
+//           if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//               connectivityManager.bindProcessToNetwork(network);
+//           } else {
+//               Toast.makeText(context, "Binding to network requires at least Android Marshmallow (API level 23)", Toast.LENGTH_SHORT).show();
+//           }
+//       }
+//     } else {
+//         // Connect to the network using the previous implementation
+//         // (addNetwork(), enableNetwork(), etc.)
+//         // ...
+//     }
+//   }
+//     public void disconnect(PluginCall call) {
+//     if (wifiManager != null) {
+//       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+//         // Remove the network suggestions
+//         wifiManager.removeNetworkSuggestions(new ArrayList<>());
+//       } else {
+//         // Disconnect from the currently connected WiFi network
+//         wifiManager.disconnect();
+//       }
+//     }
+//   }
+// }
