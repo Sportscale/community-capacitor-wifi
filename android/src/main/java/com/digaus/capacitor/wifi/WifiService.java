@@ -250,9 +250,7 @@ public void connect(PluginCall call) {
 
     public void disconnect(PluginCall call) {
     if (wifiManager != null) {
-        // Disconnect from the currently connected WiFi network
-        // wifiManager.disconnect();
-        this.releasePreviousConnection();
+      wifiManager.disconnect();
     }
 }
     private void releasePreviousConnection() {
