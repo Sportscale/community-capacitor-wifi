@@ -188,28 +188,17 @@ public void connect(PluginCall call) {
         // Call native prompts or display logs for each step if needed
     }
 
-public void disconnect(PluginCall call) {
+  public void disconnect(PluginCall call) {
     if (wifiManager != null) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            // Get the list of network suggestions
-            List<WifiNetworkSuggestion> networkSuggestions = wifiManager.getNetworkSuggestions();
-            Log.d(TAG, "Retrieved network suggestions: " + networkSuggestions.size());
-
-            // Remove the specific network suggestion
-            for (WifiNetworkSuggestion suggestion : networkSuggestions) {
-                if (suggestion.getSsid().equals(ssid)) {
-                    wifiManager.removeNetwork(suggestion);
-                    Log.d(TAG, "Network suggestion removed");
-                    break;
-                }
-            }
-        } else {
-            // Disconnect from the currently connected WiFi network
-            wifiManager.disconnect();
-            Log.d(TAG, "Disconnected from WiFi network");
-        }
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        // Remove the network suggestions
+        wifiManager.removeNetworkSuggestions(new ArrayList<>());
+      } else {
+        // Disconnect from the currently connected WiFi network
+        wifiManager.disconnect();
+      }
     }
-}
+  }
 // public void connect(PluginCall call) {
 //     this.savedCall = call;
 //     String ssid = call.getString("ssid");
@@ -630,15 +619,15 @@ public void disconnect(PluginCall call) {
 //         // ...
 //     }
 //   }
-//     public void disconnect(PluginCall call) {
-//     if (wifiManager != null) {
-//       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-//         // Remove the network suggestions
-//         wifiManager.removeNetworkSuggestions(new ArrayList<>());
-//       } else {
-//         // Disconnect from the currently connected WiFi network
-//         wifiManager.disconnect();
-//       }
-//     }
-//   }
+  //   public void disconnect(PluginCall call) {
+  //   if (wifiManager != null) {
+  //     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+  //       // Remove the network suggestions
+  //       wifiManager.removeNetworkSuggestions(new ArrayList<>());
+  //     } else {
+  //       // Disconnect from the currently connected WiFi network
+  //       wifiManager.disconnect();
+  //     }
+  //   }
+  // }
 // }
