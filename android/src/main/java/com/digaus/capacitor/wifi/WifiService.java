@@ -172,14 +172,14 @@ public void connect(PluginCall call) {
             }
             // Bind the current process to the network
             if (network != null) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    connectivityManager.bindProcessToNetwork(network);
-                    Log.d(TAG, "Bind process to network");
-                } else {
-                    Toast.makeText(context, "Binding to network requires at least Android Marshmallow (API level 23)", Toast.LENGTH_SHORT).show();
-                }
+              if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                  connectivityManager.bindProcessToNetwork(network);
+                  Log.d(TAG, "Bind process to network");
+              } else {
+                  Toast.makeText(context, "Binding to network requires at least Android Marshmallow (API level 23)", Toast.LENGTH_SHORT).show();
+              }
             }
-        } else {
+          } else {
             // Connect to the network using the previous implementation
             // (addNetwork(), enableNetwork(), etc.)
             // ...
@@ -188,17 +188,77 @@ public void connect(PluginCall call) {
         // Call native prompts or display logs for each step if needed
     }
 
-  public void disconnect(PluginCall call) {
-    if (wifiManager != null) {
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-        // Remove the network suggestions
-        wifiManager.removeNetworkSuggestions(new ArrayList<>());
-      } else {
-        // Disconnect from the currently connected WiFi network
-        wifiManager.disconnect();
-      }
+    public void switchToAnotherWifiNetwork(PluginCall call) {
+              String newSsid = call.getString("ssid");
+        String newPassword = call.getString("password");
+
+
+        WifiNetworkSpecifier.Builder builder = new WifiNetworkSpecifier.Builder();
+        builder.setSsid(newSsid);
+        builder.setWpa2Passphrase(newPassword);
+        WifiNetworkSpecifier wifiNetworkSpecifier = builder.build();
+
+        NetworkRequest.Builder networkRequestBuilder = new NetworkRequest.Builder();
+        networkRequestBuilder.addTransportType(NetworkCapabilities.TRANSPORT_WIFI);
+        networkRequestBuilder.removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+        networkRequestBuilder.setNetworkSpecifier(wifiNetworkSpecifier);
+        NetworkRequest networkRequest = networkRequestBuilder.build();
+
+
+        if (this.connectivityManager != null) {
+ConnectivityManager.NetworkCallback networkCallback = 
+                    new ConnectivityManager.NetworkCallback() {
+                @Override
+                public void onAvailable(Network network) {
+                    super.onAvailable(network);
+                    // Действия после подключения к новой WiFi сети
+                }
+            };
+
+            connectivityManager.requestNetwork(networkRequest, networkCallback);
+        }
+}
+  // public void disconnect(PluginCall call) {
+  //   if (wifiManager != null) {
+  //     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+  //       // Remove the network suggestions
+  //       wifiManager.removeNetworkSuggestions(new ArrayList<>());
+  //     } else {
+  //       // Disconnect from the currently connected WiFi network
+  //       wifiManager.disconnect();
+  //     }
+  //   }
+  // }
+
+      public void disconnect(PluginCall call) {
+        String mySsid = call.getString("ssid");
+        String myPassword = call.getString("password");
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            WifiNetworkSpecifier.Builder builder = new WifiNetworkSpecifier.Builder();
+            builder.setSsid(mySsid);
+            builder.setWpa2Passphrase(myPassword);
+            WifiNetworkSpecifier wifiNetworkSpecifier = builder.build();
+
+            NetworkRequest.Builder networkRequestBuilder = new NetworkRequest.Builder();
+            networkRequestBuilder.removeTransportType(NetworkCapabilities.TRANSPORT_WIFI);
+            networkRequestBuilder.setNetworkSpecifier(wifiNetworkSpecifier);
+            NetworkRequest networkRequest = networkRequestBuilder.build();
+//            ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            if (wifiManager != null) {
+                ConnectivityManager.NetworkCallback networkCallback =
+                        new ConnectivityManager.NetworkCallback() {
+                            @Override
+                            public void onLost(Network network) {
+                                super.onLost(network);
+                                // Действия после отключения от WiFi сети
+                            }
+                        };
+                connectivityManager.requestNetwork(networkRequest, networkCallback);
+            }
+        }
     }
-  }
+
 // public void connect(PluginCall call) {
 //     this.savedCall = call;
 //     String ssid = call.getString("ssid");

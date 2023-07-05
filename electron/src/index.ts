@@ -39,11 +39,16 @@ export class Wifi implements WifiPlugin {
     if (!currentConnections && !currentConnections[0]) throw new Error('ERROR_NO_NETWORK_FOUND');
     return { ssid: currentConnections[0].ssid };
   }
-
+  
   async connect(options: { ssid: string; password?: string }): Promise<{ ssid: string | null }> {
     await nodeWifi.connect(options);
     return this.checkConnection();
   }
+  async newConnect(options: { ssid: string; password?: string }): Promise<{ ssid: string | null }> {
+    await nodeWifi.connect(options);
+    return this.checkConnection();
+  }
+
 
   async connectPrefix(options: { ssid: string; password?: string }): Promise<{ ssid: string | null }> {
     let currentNetwork: { ssid: string | null };

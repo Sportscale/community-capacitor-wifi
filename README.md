@@ -7,6 +7,7 @@
 * [`connect(...)`](#connect)
 * [`connectPrefix(...)`](#connectprefix)
 * [`disconnect()`](#disconnect)
+* [`newConnect(...)`](#newconnect)
 
 </docgen-index>
 
@@ -70,6 +71,21 @@ connectPrefix(options: { ssid: string; password?: string; joinOnce?: boolean; })
 ```typescript
 disconnect() => Promise<void>
 ```
+
+--------------------
+
+
+### newConnect(...)
+
+```typescript
+newConnect(options: { ssid: string; password?: string; joinOnce?: boolean; isHiddenSsid?: boolean; }) => Promise<{ ssid: string | null; }>
+```
+
+| Param         | Type                                                                                          |
+| ------------- | --------------------------------------------------------------------------------------------- |
+| **`options`** | <code>{ ssid: string; password?: string; joinOnce?: boolean; isHiddenSsid?: boolean; }</code> |
+
+**Returns:** <code>Promise&lt;{ ssid: string | null; }&gt;</code>
 
 --------------------
 

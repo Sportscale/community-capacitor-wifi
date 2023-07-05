@@ -65,6 +65,19 @@ public class Wifi extends Plugin {
         }
 
     }
+    @PluginMethod()
+    public void newConnect(PluginCall call) {
+        if (!call.getData().has("ssid")) {
+            call.reject("Must provide an ssiddd");
+            return;
+        }
+        if (API_VERSION >= 23 && getPermissionState("fineLocation") != PermissionState.GRANTED) {
+            requestPermissionForAlias("fineLocation", call, "accessFineLocation");
+        } else {
+            this.wifiService.switchToAnotherWifiNetwork(call);
+        }
+
+    }
 
     @PluginMethod()
     public void connectPrefix(PluginCall call) {
