@@ -169,8 +169,7 @@ public void connect(PluginCall call) {
             Network[] networks = connectivityManager.getAllNetworks();
             for (Network n : networks) {
                 NetworkInfo networkInfo = connectivityManager.getNetworkInfo(n);
-                if (networkInfo != null && networkInfo.getType() == ConnectivityManager.TYPE_WIFI
-                        && networkInfo.getExtraInfo().equals("\"" + ssid + "\"")) {
+                if (networkInfo != null && networkInfo.getType() == ConnectivityManager.TYPE_WIFI && networkInfo.getExtraInfo().equals("\"" + ssid + "\"")) {
                     network = n;
                     break;
                 }
@@ -250,9 +249,10 @@ public void connect(PluginCall call) {
     // }
 
     public void disconnect(PluginCall call) {
-    if (wifiManager != null && wifiManager.isWifiEnabled()) {
+    if (wifiManager != null) {
         // Disconnect from the currently connected WiFi network
-        wifiManager.disconnect();
+        // wifiManager.disconnect();
+        this.releasePreviousConnection();
     }
 }
     private void releasePreviousConnection() {
