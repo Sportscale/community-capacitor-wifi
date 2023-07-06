@@ -128,7 +128,67 @@ public class WifiService {
     //     }*/
     // }
 
-public void connect(PluginCall call) {
+// public void connect(PluginCall call) {
+//         this.savedCall = call;
+//         String ssid = call.getString("ssid");
+//         String password = call.getString("password");
+//         boolean isHiddenSsid = false;
+//         if (call.hasOption("isHiddenSsid")) {
+//             isHiddenSsid = call.getBoolean("isHiddenSsid");
+//         }
+
+//         // Release current connection if there is one
+//         this.releasePreviousConnection();
+
+//         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+//             // Create a list of WifiNetworkSuggestion objects
+//             List<WifiNetworkSuggestion> networkSuggestions = new ArrayList<>();
+
+//             // Create a WifiNetworkSuggestion object for the network you want to connect to
+//             WifiNetworkSuggestion suggestion = new WifiNetworkSuggestion.Builder()
+//                     .setSsid(ssid)
+//                     .setWpa2Passphrase(password)
+//                     .setIsHiddenSsid(isHiddenSsid)
+//                     .build();
+//             // Add the suggestion to the list
+//             networkSuggestions.add(suggestion);
+//             // Pass the list of suggestions to the WifiManager
+//             wifiManager.addNetworkSuggestions(networkSuggestions);
+//             // Enable auto-connection to the network
+//             wifiManager.reassociate();
+//             // Get the network ID of the connected network
+//             int networkId = wifiManager.getConnectionInfo().getNetworkId();
+//             // Get the Network object corresponding to the network ID
+//             Network network = null;
+//             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//                 Network[] networks = connectivityManager.getAllNetworks();
+//                 for (Network n : networks) {
+//                     NetworkInfo networkInfo = connectivityManager.getNetworkInfo(n);
+//                     if (networkInfo != null && networkInfo.getType() == ConnectivityManager.TYPE_WIFI && networkInfo.getExtraInfo().equals("\"" + ssid + "\"")) {
+//                         network = n;
+//                         break;
+//                     }
+//                 }
+//             }
+//             // Bind the current process to the network
+//             if (network != null) {
+//               if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//                   connectivityManager.bindProcessToNetwork(network);
+//                   Log.d(TAG, "Bind process to network");
+//               } else {
+//                   Toast.makeText(context, "Binding to network requires at least Android Marshmallow (API level 23)", Toast.LENGTH_SHORT).show();
+//               }
+//             }
+//           } else {
+//             // Connect to the network using the previous implementation
+//             // (addNetwork(), enableNetwork(), etc.)
+//             // ...
+//         }
+//         Log.d(TAG, "Connect function executed");
+//         // Call native prompts or display logs for each step if needed
+//     }
+
+    public void connect(PluginCall call) {
         this.savedCall = call;
         String ssid = call.getString("ssid");
         String password = call.getString("password");
@@ -141,82 +201,58 @@ public void connect(PluginCall call) {
         this.releasePreviousConnection();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // Create a WifiNetworkSpecifier.Builder object
+            WifiNetworkSpecifier.Builder builder = new WifiNetworkSpecifier.Builder()
+                    .setSsidPattern(new PatternMatcher(ssid, PatternMatcher.PATTERN_PREFIX))
+                    .setWpa2Passphrase(password);
+
+            if (isHiddenSsid) {
+                builder.setIsHiddenSsid(true);
+            }
+
+            // Create a WifiNetworkSpecifier object
+            WifiNetworkSpecifier specifier = builder.build();
+
+            // Create a WifiNetworkSuggestion.Builder object
+            WifiNetworkSuggestion.Builder suggestionBuilder = new WifiNetworkSuggestion.Builder()
+                    .setPriority(1)
+                    // .setNetworkSpecifier(specifier);
+
             // Create a list of WifiNetworkSuggestion objects
             List<WifiNetworkSuggestion> networkSuggestions = new ArrayList<>();
+            networkSuggestions.add(suggestionBuilder.build());
 
-            // Create a WifiNetworkSuggestion object for the network you want to connect to
-            WifiNetworkSuggestion suggestion = new WifiNetworkSuggestion.Builder()
-                    .setSsid(ssid)
-                    .setWpa2Passphrase(password)
-                    .setIsHiddenSsid(isHiddenSsid)
-                    .build();
-            // Add the suggestion to the list
-            networkSuggestions.add(suggestion);
-            // Pass the list of suggestions to the WifiManager
+            // Call the WifiManager#addNetworkSuggestions() method
             wifiManager.addNetworkSuggestions(networkSuggestions);
-            // Enable auto-connection to the network
-            wifiManager.reassociate();
-            // Get the network ID of the connected network
-            int networkId = wifiManager.getConnectionInfo().getNetworkId();
-            // Get the Network object corresponding to the network ID
-            Network network = null;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                Network[] networks = connectivityManager.getAllNetworks();
-                for (Network n : networks) {
-                    NetworkInfo networkInfo = connectivityManager.getNetworkInfo(n);
-                    if (networkInfo != null && networkInfo.getType() == ConnectivityManager.TYPE_WIFI && networkInfo.getExtraInfo().equals("\"" + ssid + "\"")) {
-                        network = n;
-                        break;
-                    }
-                }
-            }
-            // Bind the current process to the network
-            if (network != null) {
-              if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                  connectivityManager.bindProcessToNetwork(network);
-                  Log.d(TAG, "Bind process to network");
-              } else {
-                  Toast.makeText(context, "Binding to network requires at least Android Marshmallow (API level 23)", Toast.LENGTH_SHORT).show();
-              }
-            }
-          } else {
+        } else {
             // Connect to the network using the previous implementation
-            // (addNetwork(), enableNetwork(), etc.)
-            // ...
+
+            // Create a WifiConfiguration object
+            WifiConfiguration wifiConfig = new WifiConfiguration();
+            wifiConfig.SSID = "\"" + ssid + "\"";
+            wifiConfig.preSharedKey = "\"" + password + "\"";
+            wifiConfig.hiddenSSID = isHiddenSsid;
+
+            // Add and enable the network
+            int networkId = wifiManager.addNetwork(wifiConfig);
+            wifiManager.enableNetwork(networkId, true);
+            wifiManager.reconnect();
         }
-        Log.d(TAG, "Connect function executed");
-        // Call native prompts or display logs for each step if needed
     }
 
-    public void switchToAnotherWifiNetwork(PluginCall call) {
-              String newSsid = call.getString("ssid");
-        String newPassword = call.getString("password");
+public void disconnect(PluginCall call) {
+    if (wifiManager != null) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // Create an IntentSender for the ACTION_WIFI_ADD_NETWORKS intent
+            PendingIntent intentSender = PendingIntent.getBroadcast(context, 0, new Intent(), PendingIntent.FLAG_IMMUTABLE);
 
-
-        WifiNetworkSpecifier.Builder builder = new WifiNetworkSpecifier.Builder();
-        builder.setSsid(newSsid);
-        builder.setWpa2Passphrase(newPassword);
-        WifiNetworkSpecifier wifiNetworkSpecifier = builder.build();
-
-        NetworkRequest.Builder networkRequestBuilder = new NetworkRequest.Builder();
-        networkRequestBuilder.addTransportType(NetworkCapabilities.TRANSPORT_WIFI);
-        networkRequestBuilder.removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
-        networkRequestBuilder.setNetworkSpecifier(wifiNetworkSpecifier);
-        NetworkRequest networkRequest = networkRequestBuilder.build();
-
-
-        if (this.connectivityManager != null) {
-ConnectivityManager.NetworkCallback networkCallback = 
-                    new ConnectivityManager.NetworkCallback() {
-                @Override
-                public void onAvailable(Network network) {
-                    super.onAvailable(network);
-                    // Действия после подключения к новой WiFi сети
-                }
-            };
-
-            connectivityManager.requestNetwork(networkRequest, networkCallback);
+            // Call the WifiManager#removeNetworkSuggestions() method
+            wifiManager.removeNetworkSuggestions(new ArrayList<>());
+        } else {
+            // Disconnect from the currently connected WiFi network
+            wifiManager.disconnect();
         }
+    }
 }
   // public void disconnect(PluginCall call) {
   //   if (wifiManager != null) {
@@ -230,34 +266,34 @@ ConnectivityManager.NetworkCallback networkCallback =
   //   }
   // }
 
-      public void disconnect(PluginCall call) {
-        String mySsid = call.getString("ssid");
-        String myPassword = call.getString("password");
+//       public void disconnect(PluginCall call) {
+//         String mySsid = call.getString("ssid");
+//         String myPassword = call.getString("password");
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            WifiNetworkSpecifier.Builder builder = new WifiNetworkSpecifier.Builder();
-            builder.setSsid(mySsid);
-            builder.setWpa2Passphrase(myPassword);
-            WifiNetworkSpecifier wifiNetworkSpecifier = builder.build();
+//         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+//             WifiNetworkSpecifier.Builder builder = new WifiNetworkSpecifier.Builder();
+//             builder.setSsid(mySsid);
+//             builder.setWpa2Passphrase(myPassword);
+//             WifiNetworkSpecifier wifiNetworkSpecifier = builder.build();
 
-            NetworkRequest.Builder networkRequestBuilder = new NetworkRequest.Builder();
-            networkRequestBuilder.removeTransportType(NetworkCapabilities.TRANSPORT_WIFI);
-            networkRequestBuilder.setNetworkSpecifier(wifiNetworkSpecifier);
-            NetworkRequest networkRequest = networkRequestBuilder.build();
-//            ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-            if (wifiManager != null) {
-                ConnectivityManager.NetworkCallback networkCallback =
-                        new ConnectivityManager.NetworkCallback() {
-                            @Override
-                            public void onLost(Network network) {
-                                super.onLost(network);
-                                // Действия после отключения от WiFi сети
-                            }
-                        };
-                connectivityManager.requestNetwork(networkRequest, networkCallback);
-            }
-        }
-    }
+//             NetworkRequest.Builder networkRequestBuilder = new NetworkRequest.Builder();
+//             networkRequestBuilder.removeTransportType(NetworkCapabilities.TRANSPORT_WIFI);
+//             networkRequestBuilder.setNetworkSpecifier(wifiNetworkSpecifier);
+//             NetworkRequest networkRequest = networkRequestBuilder.build();
+// //            ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+//             if (wifiManager != null) {
+//                 ConnectivityManager.NetworkCallback networkCallback =
+//                         new ConnectivityManager.NetworkCallback() {
+//                             @Override
+//                             public void onLost(Network network) {
+//                                 super.onLost(network);
+//                                 // Действия после отключения от WiFi сети
+//                             }
+//                         };
+//                 connectivityManager.requestNetwork(networkRequest, networkCallback);
+//             }
+//         }
+//     }
 
 // public void connect(PluginCall call) {
 //     this.savedCall = call;
@@ -679,15 +715,15 @@ ConnectivityManager.NetworkCallback networkCallback =
 //         // ...
 //     }
 //   }
-  //   public void disconnect(PluginCall call) {
-  //   if (wifiManager != null) {
-  //     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-  //       // Remove the network suggestions
-  //       wifiManager.removeNetworkSuggestions(new ArrayList<>());
-  //     } else {
-  //       // Disconnect from the currently connected WiFi network
-  //       wifiManager.disconnect();
-  //     }
-  //   }
-  // }
+//     public void disconnect(PluginCall call) {
+//     if (wifiManager != null) {
+//       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+//         // Remove the network suggestions
+//         wifiManager.removeNetworkSuggestions(new ArrayList<>());
+//       } else {
+//         // Disconnect from the currently connected WiFi network
+//         wifiManager.disconnect();
+//       }
+//     }
+//   }
 // }

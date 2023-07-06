@@ -15,9 +15,7 @@ export interface WifiPlugin {
      /** iOS only: https://developer.apple.com/documentation/networkextension/nehotspotconfiguration/2887518-joinonce yy */
     joinOnce?: boolean,
   }): Promise<{ ssid: string | null }>;
-  disconnect(options: {
-    ssid: string,
-    password?: string }): Promise<void>;
+  disconnect(): Promise<void>;
   newConnect(options: {
     ssid: string,
     password?: string,

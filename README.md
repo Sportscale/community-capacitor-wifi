@@ -6,7 +6,7 @@
 * [`getSSID()`](#getssid)
 * [`connect(...)`](#connect)
 * [`connectPrefix(...)`](#connectprefix)
-* [`disconnect(...)`](#disconnect)
+* [`disconnect()`](#disconnect)
 * [`newConnect(...)`](#newconnect)
 
 </docgen-index>
@@ -66,15 +66,11 @@ connectPrefix(options: { ssid: string; password?: string; joinOnce?: boolean; })
 --------------------
 
 
-### disconnect(...)
+### disconnect()
 
 ```typescript
-disconnect(options: { ssid: string; password?: string; }) => Promise<void>
+disconnect() => Promise<void>
 ```
-
-| Param         | Type                                              |
-| ------------- | ------------------------------------------------- |
-| **`options`** | <code>{ ssid: string; password?: string; }</code> |
 
 --------------------
 
