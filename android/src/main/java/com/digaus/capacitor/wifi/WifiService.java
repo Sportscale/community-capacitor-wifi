@@ -20,7 +20,7 @@ import android.os.Build;
 import android.os.PatternMatcher;
 import android.provider.Settings;
 import android.util.Log;
-
+import android.app.PendingIntent;
 import com.getcapacitor.Bridge;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.PluginCall;
@@ -215,7 +215,7 @@ public class WifiService {
 
             // Create a WifiNetworkSuggestion.Builder object
             WifiNetworkSuggestion.Builder suggestionBuilder = new WifiNetworkSuggestion.Builder()
-                    .setPriority(1)
+                    .setPriority(1);
                     // .setNetworkSpecifier(specifier);
 
             // Create a list of WifiNetworkSuggestion objects
