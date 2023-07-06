@@ -62,21 +62,22 @@ public class WifiService {
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             // Create an Intent for the ACTION_WIFI_ADD_NETWORKS
+          ArrayList<WifiNetworkSuggestion> suggestions = new ArrayList<>();
+
+            // WPA2 configuration
+          suggestions.add(
+            new WifiNetworkSuggestion.Builder()
+              .setSsid(ssid)
+              .setWpa2Passphrase(password)
+              .build()
+          );
+
+            Bundle bundle = new Bundle();
+            bundle.putParcelableArrayList("android.provider.extra.WIFI_NETWORK_LIST", suggestions);
             Intent intent = new Intent(Settings.ACTION_WIFI_ADD_NETWORKS);
+            intent.putExtras(bundle);
 
-            // Set the extras for the network suggestion
-            WifiNetworkSuggestion suggestion = new WifiNetworkSuggestion.Builder()
-                    .setSsid(ssid)
-                    .setWpa2Passphrase(password)
-                    .setIsHiddenSsid(isHiddenSsid)
-                    .build();
-
-            // Add the network suggestion to the intent
-            String wifiNetworkSuggestionExtra = "android.provider.extra.WIFI_NETWORK_SUGGESTION";
-            intent.putExtra(wifiNetworkSuggestionExtra, suggestion);
-            // Start the activity to add the network suggestion
-            wifiAddNetworkLauncher.launch(intent);
-
+            ((Activity) context).startActivityForResult(intent, REQUEST_WIFI_SETTINGS);
             // Show a toast message to indicate that the network suggestion is being added
             Toast.makeText(context, "Adding network suggestion...", Toast.LENGTH_SHORT).show();
             Log.d("WifiService", "Adding network suggestion...");
