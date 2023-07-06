@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
+import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.provider.Settings;
@@ -51,7 +52,6 @@ public class WifiService {
         }
       );
     }
-
     public void connect(PluginCall call) {
         this.savedCall = call;
         String ssid = call.getString("ssid");
@@ -71,6 +71,9 @@ public class WifiService {
                     .setIsHiddenSsid(isHiddenSsid)
                     .build();
 
+            // Add the network suggestion to the intent
+            String wifiNetworkSuggestionExtra = "android.provider.extra.WIFI_NETWORK_SUGGESTION";
+            intent.putExtra(wifiNetworkSuggestionExtra, suggestion);
             // Start the activity to add the network suggestion
             wifiAddNetworkLauncher.launch(intent);
 
@@ -79,7 +82,22 @@ public class WifiService {
             Log.d("WifiService", "Adding network suggestion...");
         } else {
             // Connect to the network using the previous implementation
-            // ...
+            WifiConfiguration wifiConfig = new WifiConfiguration();
+            wifiConfig.SSID = "\"" + ssid + "\"";
+            wifiConfig.preSharedKey = "\"" + password + "\"";
+            int networkId = wifiManager.addNetwork(wifiConfig);
+            if (networkId != -1) {
+                wifiManager.enableNetwork(networkId, true);
+                wifiManager.reconnect();
+
+                // Show a toast message to indicate that the connection is in progress
+                Toast.makeText(context, "Connecting to Wi-Fi network...", Toast.LENGTH_SHORT).show();
+                Log.d("WifiService", "Connecting to Wi-Fi network...");
+            } else {
+                // Failed to add the network configuration
+                Toast.makeText(context, "Failed to add network configuration", Toast.LENGTH_SHORT).show();
+                Log.d("WifiService", "Failed to add network configuration");
+            }
         }
     }
     public void disconnect(PluginCall call) {
