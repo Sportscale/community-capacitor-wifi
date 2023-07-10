@@ -26,12 +26,15 @@ public class Wifi extends Plugin {
     private static final int API_VERSION = Build.VERSION.SDK_INT;
 
     WifiService wifiService;
+    InternetConnectivityObserver internetConnectivityObserver;
 
     @Override
     public void load() {
       super.load();
       this.wifiService = new WifiService();
       this.wifiService.load(this.bridge);
+      // this.internetConnectivityObserver = new InternetConnectivityObserver();
+      // this.internetConnectivityObserver.load(this.bridge);
     }
     
     @PluginMethod()
@@ -62,5 +65,17 @@ public class Wifi extends Plugin {
       } else {
         call.reject("User denied permission");
       }
+    }
+    @PluginMethod()
+    public void startObserver(PluginCall call) {
+        this.internetConnectivityObserver.startObserving();
+    }
+    @PluginMethod()
+    public void stopObserver(PluginCall call) {
+        this.internetConnectivityObserver.stopObserving();
+    }
+    @PluginMethod()
+    public void isConnected(PluginCall call) {
+        this.internetConnectivityObserver.isConnected();
     }
 }

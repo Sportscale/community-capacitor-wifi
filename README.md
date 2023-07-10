@@ -4,6 +4,9 @@
 
 * [`connect(...)`](#connect)
 * [`disconnect()`](#disconnect)
+* [`startObserver()`](#startobserver)
+* [`stopObserver()`](#stopobserver)
+* [`isConnected()`](#isconnected)
 
 </docgen-index>
 
@@ -30,6 +33,39 @@ connect(options: { ssid: string; password?: string; joinOnce?: boolean; isHidden
 ```typescript
 disconnect() => Promise<void>
 ```
+
+--------------------
+
+
+### startObserver()
+
+```typescript
+startObserver() => any
+```
+
+**Returns:** <code>any</code>
+
+--------------------
+
+
+### stopObserver()
+
+```typescript
+stopObserver() => any
+```
+
+**Returns:** <code>any</code>
+
+--------------------
+
+
+### isConnected()
+
+```typescript
+isConnected() => Promise<{ isConnected: boolean | null; }>
+```
+
+**Returns:** <code>Promise&lt;{ isConnected: boolean | null; }&gt;</code>
 
 --------------------
 

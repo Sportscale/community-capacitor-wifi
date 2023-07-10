@@ -1,0 +1,71 @@
+{
+  "api": {
+    "name": "WifiPlugin",
+    "slug": "wifiplugin",
+    "docs": "",
+    "tags": [],
+    "methods": [
+      {
+        "name": "connect",
+        "signature": "(options: { ssid: string; password?: string; joinOnce?: boolean; isHiddenSsid?: boolean; }) => Promise<{ ssid: string | null; }>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ ssid: string; password?: string | undefined; joinOnce?: boolean | undefined; isHiddenSsid?: boolean | undefined; }"
+          }
+        ],
+        "returns": "Promise<{ ssid: string | null; }>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [],
+        "slug": "connect"
+      },
+      {
+        "name": "disconnect",
+        "signature": "() => Promise<void>",
+        "parameters": [],
+        "returns": "Promise<void>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [],
+        "slug": "disconnect"
+      },
+      {
+        "name": "startObserver",
+        "signature": "() => any",
+        "parameters": [],
+        "returns": "any",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [],
+        "slug": "startobserver"
+      },
+      {
+        "name": "stopObserver",
+        "signature": "() => any",
+        "parameters": [],
+        "returns": "any",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [],
+        "slug": "stopobserver"
+      },
+      {
+        "name": "isConnected",
+        "signature": "() => Promise<{ isConnected: boolean | null; }>",
+        "parameters": [],
+        "returns": "Promise<{ isConnected: boolean | null; }>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [],
+        "slug": "isconnected"
+      }
+    ],
+    "properties": []
+  },
+  "interfaces": [],
+  "enums": [],
+  "typeAliases": [],
+  "pluginConfigs": []
+}

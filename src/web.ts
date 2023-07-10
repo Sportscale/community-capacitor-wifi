@@ -9,5 +9,15 @@ export class WifiWeb extends WebPlugin implements WifiPlugin {
   async disconnect(): Promise<void> {
     return;
   }
+  async startObserver(): Promise<void> {
+    return;
+  }
+  async stopObserver(): Promise<void> {
+    return;
+  }
+  async isConnected(): Promise<{ isConnected: boolean | null }> {
+    // console.log(options);
+    return { isConnected: null };
+  }
 
 }

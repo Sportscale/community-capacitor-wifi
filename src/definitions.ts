@@ -8,4 +8,8 @@ export interface WifiPlugin {
     isHiddenSsid?: boolean,
   }): Promise<{ ssid: string | null }>;
   disconnect(): Promise<void>;
+  startObserver(): any;
+  stopObserver(): any;
+  isConnected(): Promise<{ isConnected: boolean | null }>;
+
 }
