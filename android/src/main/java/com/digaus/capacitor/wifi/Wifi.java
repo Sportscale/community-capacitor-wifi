@@ -33,8 +33,8 @@ public class Wifi extends Plugin {
       super.load();
       this.wifiService = new WifiService();
       this.wifiService.load(this.bridge);
-      // this.internetConnectivityObserver = new InternetConnectivityObserver();
-      // this.internetConnectivityObserver.load(this.bridge);
+      this.internetConnectivityObserver = new InternetConnectivityObserver();
+      this.internetConnectivityObserver.load(this.bridge);
     }
     
     @PluginMethod()
